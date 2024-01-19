@@ -1,0 +1,57 @@
+version: '3'
+
+services:
+  # Proxy Layer
+  base_nginx:
+    build: ./docker/nginx
+    container_name: base-nginx
+    restart: "no"
+    volumes:
+      - ./src:/var/www
+    ports:
+      - "82:80"
+    networks:
+      - basic-docker-network
+
+  # Application Layer
+  base_php:
+    build: ./docker/php
+    container_name: base-php
+    restart: "no"
+    volumes:
+      - ./src:/var/www
+    networks:
+      - basic-docker-network
+
+  # Cache Layer
+  base_redis:
+    build: ./docker/redis
+    container_name: base-redis
+    restart: "no"
+    user: www-data
+    ports:
+      - "6379"
+    command: "redis-server /usr/local/etc/redis/redis.conf"
+    volumes:
+      - "./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf"
+    networks:
+      - basic-docker-network
+
+  # Database Layer
+  base_mysql:
+    build: ./docker/mysql
+    container_name: base-mysql
+    restart: "no"
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql/volume:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=sso-db
+      - MYSQL_ROOT_PASSWORD=root
+    networks:
+      - basic-docker-network
+
+networks:
+  basic-docker-network:
+    driver: bridge
